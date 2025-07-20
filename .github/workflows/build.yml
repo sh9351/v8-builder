@@ -16,7 +16,7 @@ jobs:
     outputs:
       v8_version: ${{ steps.got_version.outputs.version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - id: got_version
         run: |
           cd $GITHUB_WORKSPACE
@@ -27,13 +27,13 @@ jobs:
     runs-on: windows-2025
     needs: version_reader
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Run build script
         shell: cmd
         run: |
           cd %GITHUB_WORKSPACE%
           call .\builders\v8-windows.cmd ${{ needs.version_reader.outputs.v8_version }}
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: windows
           path: |
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [version_reader, build_windows]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           path: "v8"
       - name: Make zip
