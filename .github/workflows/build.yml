@@ -1,0 +1,76 @@
+name: Build V8
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "V8_VERSION"
+      - "builders/**"
+      - ".github/workflows/build.yml"
+
+jobs:
+  version_reader:
+    name: Get version number
+    runs-on: ubuntu-latest
+    outputs:
+      v8_version: ${{ steps.got_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: got_version
+        run: |
+          cd $GITHUB_WORKSPACE
+          echo "::set-output name=version::$(<./V8_VERSION)"
+
+  build_windows:
+    name: Windows
+    runs-on: windows-2025
+    needs: version_reader
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run build script
+        shell: cmd
+        run: |
+          cd %GITHUB_WORKSPACE%
+          call .\builders\v8-windows.cmd ${{ needs.version_reader.outputs.v8_version }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: windows
+          path: |
+            v8/v8/out.gn/x64.release/*.dll
+            v8/v8/out.gn/x64.release/*.pdb
+            v8/v8/out.gn/x64.release/*.lib
+            v8/v8/out.gn/x64.release/*.exp
+            v8/v8/out.gn/x64.release/*.ilk
+            v8/v8/out.gn/x64.release/*.exe
+            v8/v8/out.gn/x64.release/*.dat
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [version_reader, build_windows]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          path: "v8"
+      - name: Make zip
+        run: |
+          zip -r v8_engine.zip v8
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.version_reader.outputs.v8_version }}
+          release_name: V8 engine, version ${{ needs.version_reader.outputs.v8_version }}
+          draft: true
+          prerelease: false
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: v8_engine.zip
+          asset_name: v8_engine_${{ needs.version_reader.outputs.v8_version }}.zip
+          asset_content_type: application/zip
