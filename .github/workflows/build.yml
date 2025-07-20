@@ -2,11 +2,12 @@ name: Build V8
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - "V8_VERSION"
       - "builders/**"
       - ".github/workflows/build.yml"
+  workflow_dispatch:
 
 jobs:
   version_reader:
