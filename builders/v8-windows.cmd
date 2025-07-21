@@ -28,7 +28,8 @@ call git apply --ignore-whitespace --verbose %GITHUB_WORKSPACE%\builders\BUILD.g
 
 
 echo =====[ Building V8 ]=====
-call python .\tools\dev\v8gen.py x64.release -vv -- target_os="""win""" is_component_build=true use_custom_libcxx=false is_clang=true use_lld=false v8_enable_verify_heap=false v8_enable_i18n_support=true v8_use_external_startup_data=false symbol_level=0
+@REM call python .\tools\dev\v8gen.py x64.release -vv -- target_os="""win""" is_component_build=true use_custom_libcxx=false is_clang=true use_lld=false v8_enable_verify_heap=false v8_enable_i18n_support=true v8_use_external_startup_data=false symbol_level=0
+call python .\tools\dev\v8gen.py x64.release -vv -- target_os="""win""" dcheck_always_on=false is_component_build=false is_debug=false target_cpu="x64" is_clang=false use_custom_libcxx=false v8_monolithic=true v8_static_library=true v8_use_external_startup_data=false v8_enable_disassembler=true v8_enable_object_print=true v8_enable_pointer_compression=false
 
-call ninja -C out.gn\x64.release -t clean
-call ninja -C out.gn\x64.release v8
+@REM call ninja -C out.gn\x64.release -t clean
+call ninja -C out.gn\x64.release v8_monolith
